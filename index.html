@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time Morse Translator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <main class="page">
+    <header class="hero">
+      <p class="eyebrow">Signal Lab</p>
+      <h1>Real-time Morse Code Translator</h1>
+      <p class="subhead">
+        Type in either panel. The translation updates instantly, with word
+        breaks shown as <span class="chip">/</span>.
+      </p>
+    </header>
+
+    <section class="panel-grid" aria-label="Translator panels">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Plain Text</h2>
+          <p>Letters, numbers, punctuation</p>
+        </div>
+        <textarea id="text-input" placeholder="Type a message..." spellcheck="false"></textarea>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Morse</h2>
+          <p>Use dots, dashes, and / for words</p>
+        </div>
+        <textarea id="morse-input" placeholder="... --- ..." spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Audio input">
+      <div class="panel-head">
+        <h2>Audio Input</h2>
+        <p>Decode Morse beeps from your mic or a file</p>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <button id="mic-toggle" class="btn">Start Mic</button>
+          <button id="sys-audio-toggle" class="btn ghost">Capture Tab</button>
+          <div class="status" id="mic-status">Audio idle</div>
+        </div>
+        <div class="control-group">
+          <label class="file-label" for="audio-file">
+            Upload Audio
+            <input id="audio-file" type="file" accept="audio/*" aria-label="Upload Morse audio" />
+          </label>
+          <div class="status" id="file-status">No file selected</div>
+        </div>
+      </div>
+      <div class="meter" aria-hidden="true">
+        <div class="meter-bar" id="meter-bar"></div>
+      </div>
+      <p class="hint">
+        Tip: A steady tone around 600-800 Hz with clear gaps decodes best.
+      </p>
+    </section>
+
+    <section class="panel" aria-label="Tone generator">
+      <div class="panel-head">
+        <h2>Tone Generator + Spectrum</h2>
+        <p>Hold the tone button to create test beeps.</p>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <button id="tone-button" class="btn ghost">Hold Tone</button>
+          <div class="status" id="tone-status">Tone idle</div>
+        </div>
+        <div class="control-group">
+          <label for="tone-frequency" class="input-label">
+            Frequency
+          </label>
+          <input id="tone-frequency" type="range" min="400" max="1000" value="720" />
+          <span class="status" id="tone-value">720 Hz</span>
+        </div>
+      </div>
+      <canvas id="spectrum" width="640" height="160"></canvas>
+    </section>
+
+    <section class="panel guide" aria-label="Morse guide">
+      <div class="panel-head">
+        <h2>Quick Guide</h2>
+        <p>Spaces separate letters. Slash separates words.</p>
+      </div>
+      <div class="guide-row" id="guide-row"></div>
+    </section>
+  </main>
+
+  <script type="module" src="script.js"></script>
+</body>
+
+</html>
