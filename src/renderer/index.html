@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Radio Assistant</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Font Awesome for icons (optional, maybe skip for now or use CDN if allowed) -->
+</head>
+<body>
+    <div id="app-container">
+        <header class="toolbar">
+            <div class="brand">
+                <h1>AI Radio</h1>
+            </div>
+            <div class="controls">
+                <div class="control-group">
+                    <label>Freq (Hz)</label>
+                    <input type="number" id="freq-input" value="144000000">
+                </div>
+                <div class="control-group">
+                    <label>Mode</label>
+                    <select id="mode-select">
+                        <option value="FM">FM</option>
+                        <option value="AM">AM</option>
+                        <option value="USB">USB</option>
+                        <option value="LSB">LSB</option>
+                        <option value="CW">CW</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <button id="mic-toggle" class="btn">Start Mic</button>
+                    <button id="record-button" class="btn" title="Record Audio">● Rec</button>
+                    <select id="audio-source-select">
+                        <option value="mic">Microphone</option>
+                        <option value="system">System Audio</option>
+                        <option value="file">File Upload</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Decoder</label>
+                    <select id="decoder-select">
+                        <option value="morse">Morse</option>
+                        <option value="pager">Pager (POCSAG)</option>
+                        <option value="emergency">Emergency</option>
+                    </select>
+                </div>
+                <div class="control-group right">
+                    <button id="settings-button" class="btn icon-btn">⚙️ Settings</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <div class="visualizer-panel">
+                <canvas id="spectrum-canvas"></canvas>
+            </div>
+
+            <div class="content-split">
+                <div class="panel decoder-panel">
+                    <div class="panel-header">
+                        <h2>Decoder Output</h2>
+                        <span class="badge">Morse</span>
+                    </div>
+                    <div id="decoder-output" class="scroll-area">Waiting for signal...</div>
+                </div>
+
+                <div class="panel chat-panel">
+                    <div class="panel-header">
+                        <h2>AI Assistant</h2>
+                    </div>
+                    <div id="chat-output" class="scroll-area">
+                        <div class="chat-message system">
+                            <span class="role">System:</span>
+                            <span class="content">Hello! I am ready to assist with decoding and radio operations.</span>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" id="chat-input" placeholder="Ask AI to tune or identify signal...">
+                        <button id="send-button" class="btn primary">Send</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer id="status-bar">System Ready</footer>
+
+        <!-- Settings Modal -->
+        <div id="settings-panel" class="modal hidden">
+            <div class="modal-content">
+                <h2>AI Configuration</h2>
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="api-base" value="https://api.openai.com/v1" placeholder="e.g. http://localhost:11434/v1">
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="api-key" placeholder="sk-...">
+                </div>
+                <div class="form-group">
+                    <label>Model Name</label>
+                    <input type="text" id="api-model" value="gpt-3.5-turbo">
+                </div>
+                <div class="modal-actions">
+                    <button id="save-settings" class="btn primary">Save & Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

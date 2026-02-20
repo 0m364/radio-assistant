@@ -57,7 +57,7 @@ const REVERSE_MAP = Object.entries(MORSE_MAP).reduce((acc, [char, code]) => {
   return acc;
 }, {});
 
-export function encodeToMorse(text) {
+function encodeToMorse(text) {
   if (!text) return "";
 
   return text
@@ -73,7 +73,7 @@ export function encodeToMorse(text) {
     .trim();
 }
 
-export function decodeFromMorse(morse) {
+function decodeFromMorse(morse) {
   if (!morse) return "";
 
   const normalized = morse
@@ -97,7 +97,7 @@ export function decodeFromMorse(morse) {
     .trim();
 }
 
-export function getGuideSamples() {
+function getGuideSamples() {
   return [
     { label: "A", code: MORSE_MAP.A },
     { label: "S", code: MORSE_MAP.S },
@@ -109,3 +109,9 @@ export function getGuideSamples() {
     { label: "!", code: MORSE_MAP["!"] },
   ];
 }
+
+module.exports = {
+  encodeToMorse,
+  decodeFromMorse,
+  getGuideSamples
+};
