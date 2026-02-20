@@ -18,6 +18,43 @@ document.addEventListener('DOMContentLoaded', () => {
     RadioService.subscribe((state) => {
         UI.updateFrequency(state.frequency);
         UI.updateMode(state.mode);
+        UI.updateSignal(state.rssi, state.isSignalPresent);
+
+        // Sync Decoder Frequency
+        DecoderService.setFrequency(state.frequency);
+
+        // Update Scan Button
+        if (UI.elements.scanButton) {
+            UI.elements.scanButton.textContent = state.isScanning ? "Stop Scan" : "SCAN";
+            UI.elements.scanButton.classList.toggle('active', state.isScanning);
+            if (state.isScanning) {
+                UI.setStatus("Scanning...");
+            } else if (state.isSignalPresent) {
+                UI.setStatus("Signal Locked");
+            } else {
+                UI.setStatus("Ready");
+            }
+        }
+    });
+
+    // Listen to Decoder Service for Simulated or Real Traffic
+    DecoderService.on('decoded', async (data) => {
+        // Raw Output
+        const time = new Date(data.timestamp).toLocaleTimeString();
+        const line = `[${time}] ${data.text}`;
+        UI.appendDecoderLog(line);
+
+        // Auto-Monitor Logic
+        if (UI.elements.autoMonitorToggle && UI.elements.autoMonitorToggle.checked) {
+            UI.setStatus("AI Analyzing...");
+            try {
+                const analysis = await AIService.analyzeTraffic(data.text);
+                UI.addTacticalLog(analysis);
+                UI.setStatus("Monitoring Active");
+            } catch (e) {
+                console.error("Auto-Monitor Error", e);
+            }
+        }
     });
 
     // Initialize Spectrum Visualizer
@@ -34,18 +71,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Wire Audio Events to UI
     AudioProcessor.on('status', (msg) => UI.setStatus(msg));
     AudioProcessor.on('text', (text) => {
-        // Prepend new text or update? For now update the display area.
-        // Ideally we accumulate history.
-        // But UI.updateDecoderOutput just sets textContent.
-        // Let's improve this:
-        const current = UI.elements.decoderOutput.textContent;
-        // Avoid duplication if possible or just show current buffer
-        UI.updateDecoderOutput(text);
+        UI.updateDecoderBuffer(text);
     });
 
     AudioProcessor.on('morse', (morse) => {
         // Optional: show morse dots/dashes somewhere
     });
+
+    // Scan Button
+    if (UI.elements.scanButton) {
+        UI.elements.scanButton.addEventListener('click', () => {
+            if (RadioService.getState().isScanning) {
+                RadioService.stopScan();
+            } else {
+                RadioService.startScan();
+            }
+        });
+    }
 
     // UI Control Events
     if (UI.elements.micToggle) {
