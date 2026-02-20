@@ -1,4 +1,4 @@
-import { decodeFromMorse, encodeToMorse } from "./morse.mjs";
+const { decodeFromMorse, encodeToMorse } = require("./morse.js");
 
 const cases = [
   {

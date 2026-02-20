@@ -2,7 +2,7 @@
   "name": "morse-translator",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
@@ -15,11 +15,7 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
-      "index.html",
-      "script.js",
-      "styles.css",
-      "morse.mjs",
+      "src/**/*",
       "package.json"
     ],
     "linux": {
