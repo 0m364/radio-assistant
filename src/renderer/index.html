@@ -5,18 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Radio Assistant</title>
     <link rel="stylesheet" href="styles.css">
-    <!-- Font Awesome for icons (optional, maybe skip for now or use CDN if allowed) -->
 </head>
 <body>
     <div id="app-container">
         <header class="toolbar">
             <div class="brand">
-                <h1>AI Radio</h1>
+                <h1>AI Radio <span class="version">MILSPEC</span></h1>
             </div>
             <div class="controls">
                 <div class="control-group">
                     <label>Freq (Hz)</label>
-                    <input type="number" id="freq-input" value="144000000">
+                    <div class="input-group">
+                        <input type="number" id="freq-input" value="144000000">
+                        <button id="scan-button" class="btn small">SCAN</button>
+                    </div>
                 </div>
                 <div class="control-group">
                     <label>Mode</label>
@@ -29,9 +31,11 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <button id="mic-toggle" class="btn">Start Mic</button>
-                    <button id="record-button" class="btn" title="Record Audio">● Rec</button>
-                    <select id="audio-source-select">
+                    <div class="input-group">
+                        <button id="mic-toggle" class="btn">Start Mic</button>
+                        <button id="record-button" class="btn" title="Record Audio">● Rec</button>
+                    </div>
+                    <select id="audio-source-select" class="mini-select">
                         <option value="mic">Microphone</option>
                         <option value="system">System Audio</option>
                         <option value="file">File Upload</option>
@@ -45,6 +49,13 @@
                         <option value="emergency">Emergency</option>
                     </select>
                 </div>
+                <div class="control-group">
+                    <label>Intel</label>
+                    <div class="toggle-row">
+                        <input type="checkbox" id="auto-monitor-toggle">
+                        <label for="auto-monitor-toggle" class="checkbox-label">Auto-Mon</label>
+                    </div>
+                </div>
                 <div class="control-group right">
                     <button id="settings-button" class="btn icon-btn">⚙️ Settings</button>
                 </div>
@@ -54,41 +65,64 @@
         <main class="dashboard">
             <div class="visualizer-panel">
                 <canvas id="spectrum-canvas"></canvas>
+                <div class="signal-overlay">
+                    <div class="signal-meter">
+                        <div class="signal-label">RSSI</div>
+                        <div class="signal-bar-bg"><div id="rssi-bar" class="signal-bar-fill" style="width: 0%;"></div></div>
+                        <div id="rssi-value">-120 dBm</div>
+                    </div>
+                </div>
             </div>
 
             <div class="content-split">
                 <div class="panel decoder-panel">
                     <div class="panel-header">
-                        <h2>Decoder Output</h2>
-                        <span class="badge">Morse</span>
+                        <h2>Raw Decoder</h2>
+                        <span class="badge" id="decoder-badge">Morse</span>
                     </div>
                     <div id="decoder-output" class="scroll-area">Waiting for signal...</div>
                 </div>
 
+                <div class="panel tactical-panel">
+                    <div class="panel-header">
+                        <h2>Tactical Log</h2>
+                        <span class="badge alert" id="alert-badge">--</span>
+                    </div>
+                    <div id="tactical-log" class="scroll-area">
+                        <div class="log-entry system">System initialized. Monitoring active.</div>
+                    </div>
+                </div>
+
                 <div class="panel chat-panel">
                     <div class="panel-header">
-                        <h2>AI Assistant</h2>
+                        <h2>AI Command</h2>
                     </div>
                     <div id="chat-output" class="scroll-area">
                         <div class="chat-message system">
                             <span class="role">System:</span>
-                            <span class="content">Hello! I am ready to assist with decoding and radio operations.</span>
+                            <span class="content">Ready.</span>
                         </div>
                     </div>
                     <div class="chat-input-area">
-                        <input type="text" id="chat-input" placeholder="Ask AI to tune or identify signal...">
+                        <input type="text" id="chat-input" placeholder="Enter command...">
                         <button id="send-button" class="btn primary">Send</button>
                     </div>
                 </div>
             </div>
         </main>
 
-        <footer id="status-bar">System Ready</footer>
+        <footer id="status-bar">
+            <span id="system-status">System: ONLINE</span>
+            <span class="spacer">|</span>
+            <span id="connection-status">Net: CONNECTED</span>
+            <span class="spacer">|</span>
+            <span id="geo-coords">Loc: 34.05N 118.25W (Sim)</span>
+        </footer>
 
         <!-- Settings Modal -->
         <div id="settings-panel" class="modal hidden">
             <div class="modal-content">
-                <h2>AI Configuration</h2>
+                <h2>Configuration</h2>
                 <div class="form-group">
                     <label>API Base URL</label>
                     <input type="text" id="api-base" value="https://api.openai.com/v1" placeholder="e.g. http://localhost:11434/v1">

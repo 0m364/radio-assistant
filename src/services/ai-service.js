@@ -50,6 +50,51 @@ class AIService {
             throw error;
         }
     }
+
+    async analyzeTraffic(text) {
+        const systemPrompt = `Analyze the following radio transmission.
+        Return a JSON object with these keys:
+        - type: (Civilian, Emergency, Military, Unknown)
+        - priority: (Low, Medium, High, CRITICAL)
+        - summary: (Short summary of content, max 10 words)
+        - entities: (Array of callsigns, locations, or names mentioned)
+
+        Only return the JSON.`;
+
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: text }
+        ];
+
+        try {
+            const content = await this.sendPrompt(messages);
+            // Attempt to parse JSON
+            try {
+                // Find JSON block if wrapped in markdown
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+                return JSON.parse(content);
+            } catch (e) {
+                // Fallback if AI didn't return valid JSON
+                return {
+                    type: 'Unknown',
+                    priority: 'Low',
+                    summary: content.substring(0, 50) + "...",
+                    entities: []
+                };
+            }
+        } catch (error) {
+            console.error("AI Analysis Error:", error);
+            return {
+                type: 'Error',
+                priority: 'Low',
+                summary: "Analysis Failed",
+                entities: []
+            };
+        }
+    }
 }
 
 module.exports = new AIService();
