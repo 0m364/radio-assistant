@@ -1,5 +1,6 @@
 const EventEmitter = require('events');
 const { decodeFromMorse } = require('../common/morse.js');
+const { AUDIO_CONFIG } = require('../common/audio-config.js');
 
 class AudioProcessor extends EventEmitter {
     constructor() {
@@ -16,13 +17,7 @@ class AudioProcessor extends EventEmitter {
         this.toneAnalyser = null;
         this.toneActive = false;
 
-        this.audioConfig = {
-            defaultDot: 120,
-            minDot: 60,
-            dashRatio: 2.2,
-            letterGapRatio: 3,
-            wordGapRatio: 7,
-        };
+        this.audioConfig = { ...AUDIO_CONFIG };
     }
 
     initAudioContext() {
