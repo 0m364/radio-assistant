@@ -3,6 +3,7 @@ class SpectrumVisualizer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.analyser = null;
+        this.dataArray = null;
         this.animationId = null;
         this.isRunning = false;
 
@@ -46,8 +47,11 @@ class SpectrumVisualizer {
         }
 
         const bufferLength = this.analyser.frequencyBinCount;
-        const data = new Uint8Array(bufferLength);
-        this.analyser.getByteFrequencyData(data);
+        if (!this.dataArray || this.dataArray.length !== bufferLength) {
+            this.dataArray = new Uint8Array(bufferLength);
+        }
+        this.analyser.getByteFrequencyData(this.dataArray);
+        const data = this.dataArray;
 
         const width = this.canvas.clientWidth;
         const height = this.canvas.clientHeight;
