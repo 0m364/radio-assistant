@@ -2,7 +2,7 @@ class AIService {
     constructor() {
         this.config = {
             apiKey: '',
-            baseUrl: 'https://api.openai.com/v1',
+            baseUrl: '',
             model: 'gpt-3.5-turbo'
         };
     }
@@ -13,8 +13,9 @@ class AIService {
     }
 
     async sendPrompt(messages) {
-        // Simple check: if not localhost and no key, warn. But some local servers might use https/remote without auth if configured so.
-        // For now, let's just try.
+        if (!this.config.baseUrl) {
+            throw new Error("AI API Base URL not configured. Please set it in Settings.");
+        }
 
         const headers = {
             'Content-Type': 'application/json'

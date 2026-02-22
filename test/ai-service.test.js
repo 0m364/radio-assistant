@@ -42,6 +42,18 @@ async function runTests() {
         assert.strictEqual(result.type, 'Error', "Should return Error when sendPrompt fails");
         assert.strictEqual(result.summary, 'Analysis Failed', "Summary should indicate failure");
 
+        // Test Case 5: Empty Base URL check
+        console.log("- Test: Empty Base URL check");
+        // Restore original method for this test
+        AIService.sendPrompt = originalSendPrompt;
+        AIService.configure({ baseUrl: '' });
+        try {
+            await AIService.sendPrompt([{ role: 'user', content: 'test' }]);
+            assert.fail("Should have thrown error for empty baseUrl");
+        } catch (e) {
+            assert.ok(e.message.includes("not configured"), "Error message should mention configuration");
+        }
+
         console.log("\nAll AI Service tests passed!");
     } catch (error) {
         console.error("\nTests FAILED!");
