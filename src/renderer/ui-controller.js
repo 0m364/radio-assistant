@@ -1,6 +1,7 @@
 class UIController {
     constructor() {
         this.elements = {};
+        this.mapInterval = null;
     }
 
     init() {
@@ -10,7 +11,8 @@ class UIController {
             'audio-source-select', 'decoder-select', 'settings-button', 'settings-panel',
             'save-settings', 'api-key', 'api-base', 'api-model',
             'scan-button', 'auto-monitor-toggle', 'auto-collect-toggle', 'rssi-bar', 'rssi-value',
-            'tactical-log', 'alert-badge', 'system-status', 'geo-coords'
+            'tactical-log', 'alert-badge', 'system-status', 'geo-coords',
+            'map-canvas', 'threat-level' // New IDs
         ];
 
         ids.forEach(id => {
@@ -22,9 +24,50 @@ class UIController {
             }
         });
 
-        // specific mappings if needed (none really needed if naming convention holds)
         this.elements.settingsPanel = document.getElementById('settings-panel');
-        this.elements.micToggle = document.getElementById('mic-toggle'); // ensure this exists
+        this.startMapSimulation();
+    }
+
+    startMapSimulation() {
+        if (!this.elements.mapCanvas) return;
+        const ctx = this.elements.mapCanvas.getContext('2d');
+        const updateCanvasSize = () => {
+            if (this.elements.mapCanvas.parentElement) {
+                this.elements.mapCanvas.width = this.elements.mapCanvas.parentElement.clientWidth;
+                this.elements.mapCanvas.height = this.elements.mapCanvas.parentElement.clientHeight;
+            }
+        };
+        window.addEventListener('resize', updateCanvasSize);
+        updateCanvasSize();
+
+        const draw = () => {
+            const w = this.elements.mapCanvas.width;
+            const h = this.elements.mapCanvas.height;
+
+            // Dark background
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, w, h);
+
+            // Grid
+            ctx.strokeStyle = '#003300';
+            ctx.lineWidth = 1;
+            for(let x=0; x<w; x+=20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+            for(let y=0; y<h; y+=20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+            // Random Targets
+            if (Math.random() > 0.9) {
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                ctx.fillStyle = '#0f0';
+                ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI*2); ctx.fill();
+
+                // Fade effect
+                ctx.strokeStyle = '#0f0';
+                ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI*2); ctx.stroke();
+            }
+        };
+
+        this.mapInterval = setInterval(draw, 1000);
     }
 
     setStatus(text) {
@@ -65,7 +108,7 @@ class UIController {
 
         const contentSpan = document.createElement('span');
         contentSpan.className = 'content';
-        contentSpan.textContent = text; // Secure text content
+        contentSpan.textContent = text;
 
         msg.appendChild(roleSpan);
         msg.appendChild(document.createTextNode(' '));
@@ -84,11 +127,8 @@ class UIController {
     }
 
     updateFrequency(freq) {
-        if (this.elements.freqInput) {
-             // Avoid loop if focused? maybe not needed for now
-             if (document.activeElement !== this.elements.freqInput) {
-                this.elements.freqInput.value = freq;
-             }
+        if (this.elements.freqInput && document.activeElement !== this.elements.freqInput) {
+            this.elements.freqInput.value = freq;
         }
     }
 
@@ -134,40 +174,109 @@ class UIController {
         if (!this.elements.tacticalLog) return;
 
         const div = document.createElement('div');
-        const prio = entry.priority ? entry.priority.toLowerCase() : 'low';
-        div.className = `log-entry ${prio}`;
+        div.className = `log-entry ${entry.urgency ? entry.urgency.toLowerCase() : 'routine'}`;
 
         const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-        // Use textContent for safety, but innerHTML for structure
 
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'timestamp';
-        timeSpan.textContent = `[${time}]`;
+        // 1. Timestamp
+        const tsSpan = document.createElement('span');
+        tsSpan.className = 'timestamp';
+        tsSpan.textContent = `[${time}]`;
+        div.appendChild(tsSpan);
 
+        // 2. Encryption Badge
+        if (entry.cipher_status === 'ENCRYPTED' || entry.cipher_status === 'CODED') {
+            const badge = document.createElement('span');
+            badge.className = 'badge alert';
+            badge.textContent = `🔒 ${entry.cipher_status}`;
+            div.appendChild(document.createTextNode(' '));
+            div.appendChild(badge);
+        }
+
+        // 3. Urgency Badge
+        if (entry.urgency === 'FLASH' || entry.urgency === 'IMMEDIATE') {
+            const badge = document.createElement('span');
+            badge.className = 'badge alert blink';
+            badge.textContent = entry.urgency;
+            div.appendChild(document.createTextNode(' '));
+            div.appendChild(badge);
+        }
+
+        // 4. Type
         const typeSpan = document.createElement('span');
         typeSpan.className = 'type';
-        typeSpan.textContent = ` ${entry.type || 'INFO'}`;
-
-        const textNode = document.createTextNode(`: ${entry.summary}`);
-
-        div.appendChild(timeSpan);
+        typeSpan.textContent = ` [${entry.type || 'UNK'}] `;
         div.appendChild(typeSpan);
-        div.appendChild(textNode);
 
-        this.elements.tacticalLog.prepend(div); // Newest top
+        // 5. Callsigns
+        if (entry.callsign_source && entry.callsign_source !== 'UNKNOWN') {
+             const sourceSpan = document.createElement('span');
+             sourceSpan.className = 'callsign';
+             sourceSpan.textContent = entry.callsign_source;
+             div.appendChild(sourceSpan);
 
-        // Update badge
-        if (this.elements.alertBadge) {
-            if (entry.priority === 'High' || entry.priority === 'CRITICAL') {
-                this.elements.alertBadge.textContent = "ALERT";
-                this.elements.alertBadge.classList.add('active');
+             if (entry.callsign_dest && entry.callsign_dest !== 'UNKNOWN') {
+                 div.appendChild(document.createTextNode(' -> '));
+                 const destSpan = document.createElement('span');
+                 destSpan.className = 'callsign';
+                 destSpan.textContent = entry.callsign_dest;
+                 div.appendChild(destSpan);
+             }
+             div.appendChild(document.createTextNode(': '));
+        }
+
+        // 6. Summary
+        const sumSpan = document.createElement('span');
+        sumSpan.className = 'summary';
+        sumSpan.textContent = entry.summary;
+        div.appendChild(sumSpan);
+
+        // 7. Keywords
+        if (entry.keywords && entry.keywords.length > 0) {
+            const kwDiv = document.createElement('div');
+            kwDiv.className = 'keywords';
+            kwDiv.textContent = `KEYS: ${entry.keywords.join(', ')}`;
+            div.appendChild(kwDiv);
+        }
+
+        this.elements.tacticalLog.prepend(div);
+        this.updateThreatDisplay(entry);
+    }
+
+    updateThreatDisplay(entry) {
+        // Threat Level Logic
+        let threat = "DEFCON 5";
+        let color = "#0f0"; // Green
+
+        if (entry.urgency === 'FLASH') {
+            threat = "DEFCON 1";
+            color = "#f00";
+        } else if (entry.urgency === 'IMMEDIATE') {
+            threat = "DEFCON 2";
+            color = "#ff4400";
+        } else if (entry.cipher_status === 'ENCRYPTED') {
+            threat = "DEFCON 3";
+            color = "#ffaa00";
+        }
+
+        if (this.elements.threatLevel) {
+            this.elements.threatLevel.textContent = threat;
+            this.elements.threatLevel.style.color = color;
+            if (threat === "DEFCON 1") {
+                this.elements.threatLevel.classList.add('blink');
             } else {
-                // Keep alert if recent? For now reset on low priority? No, better logic needed.
-                // Just leave it active until dismissed? Or simple toggle.
-                // Let's just set it to type.
-                this.elements.alertBadge.textContent = entry.type || "--";
-                this.elements.alertBadge.classList.remove('active');
+                this.elements.threatLevel.classList.remove('blink');
             }
+        }
+
+        if (this.elements.alertBadge) {
+             if (entry.urgency === 'FLASH' || entry.urgency === 'IMMEDIATE') {
+                 this.elements.alertBadge.textContent = "ALERT";
+                 this.elements.alertBadge.classList.add('active');
+             } else {
+                 this.elements.alertBadge.textContent = entry.type || "--";
+                 this.elements.alertBadge.classList.remove('active');
+             }
         }
     }
 }

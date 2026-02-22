@@ -6,10 +6,13 @@ const AIService = require('../src/services/ai-service.js');
 AIService.analyzeTraffic = async (text) => {
     console.log(`[AI Mock] Analyzing: "${text}"`);
     return {
-        type: 'Simulation',
-        priority: 'Medium',
-        summary: 'Mocked Analysis',
-        entities: ['MockEntity']
+        type: 'Military (HFGCS)',
+        urgency: 'FLASH',
+        cipher_status: 'ENCRYPTED',
+        callsign_source: 'SKYKING',
+        callsign_dest: 'ALL STATIONS',
+        summary: 'Emergency Action Message Intercepted',
+        keywords: ['SKYKING', 'EAM']
     };
 };
 
@@ -20,16 +23,19 @@ RadioService.subscribe((state) => {
 });
 
 DecoderService.on('decoded', async (data) => {
-    console.log(`\n[Decoder] DECODED: "${data.text}" (Type: ${data.type})`);
+    console.log(`\n[Decoder] DECODED: "${data.text}" (Freq: ${data.frequency} Hz)`);
 
     // Test AI Integration
     const analysis = await AIService.analyzeTraffic(data.text);
-    console.log(`[AI Analysis] Type: ${analysis.type}, Priority: ${analysis.priority}`);
+    console.log(`[AI Analysis] Type: ${analysis.type}, Urgency: ${analysis.urgency}, Status: ${analysis.cipher_status}`);
 
     // Stop after one successful decode to finish test
     console.log("Test Passed!");
     process.exit(0);
 });
+
+// Set start frequency just below target so scan hits it immediately
+RadioService.setFrequency(11170000);
 
 console.log("Starting Radio Scan...");
 RadioService.startScan();

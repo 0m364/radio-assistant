@@ -3,9 +3,9 @@ const SIMULATED_TRAFFIC = require('../common/simulated-traffic.js');
 class RadioService {
     constructor() {
         this.state = {
-            frequency: 144000000, // Hz
-            mode: 'FM',
-            bandwidth: 12000,
+            frequency: 11175000, // 11.175 MHz (HFGCS Primary)
+            mode: 'USB',
+            bandwidth: 3000,
             active: false,
             rssi: -110, // dBm
             snr: 0,     // dB
@@ -14,8 +14,8 @@ class RadioService {
         };
         this.listeners = [];
         this.scanInterval = null;
-        this.scanStepSize = 25000; // 25 kHz
-        this.scanRange = { min: 118000000, max: 470000000 };
+        this.scanStepSize = 5000; // Reduced step size for HF
+        this.scanRange = { min: 2000000, max: 470000000 }; // Expanded to include HF (2MHz+)
     }
 
     setFrequency(freq) {
