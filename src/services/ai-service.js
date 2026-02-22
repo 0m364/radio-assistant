@@ -53,12 +53,20 @@ class AIService {
     }
 
     async analyzeTraffic(text) {
-        const systemPrompt = `Analyze the following radio transmission.
-        Return a JSON object with these keys:
-        - type: (Civilian, Emergency, Military, Unknown)
-        - priority: (Low, Medium, High, CRITICAL)
-        - summary: (Short summary of content, max 10 words)
-        - entities: (Array of callsigns, locations, or names mentioned)
+        const systemPrompt = `You are a Military SIGINT Analyst. Analyze the intercepted radio transmission.
+
+        Return a JSON object with these EXACT keys:
+        - type: (e.g., "Military Air", "HFGCS", "Numbers Station", "Maritime", "Civilian", "Unknown")
+        - urgency: (FLASH, IMMEDIATE, PRIORITY, ROUTINE)
+        - cipher_status: (CLEAR, ENCRYPTED, CODED)
+        - callsign_source: (The sender's callsign, or null)
+        - callsign_dest: (The recipient's callsign, or null)
+        - summary: (Tactical summary, max 15 words)
+        - keywords: (Array of critical keywords found, e.g., "SKYKING", "MAYDAY", "VAMPIRE")
+
+        If the message contains random numbers or letters (like "Z4X" or "481"), mark as CODED or ENCRYPTED.
+        If it mentions "SKYKING", urgency is FLASH.
+        If it mentions "MAYDAY" or "PAN PAN", urgency is IMMEDIATE.
 
         Only return the JSON.`;
 
@@ -79,20 +87,28 @@ class AIService {
                 return JSON.parse(content);
             } catch (e) {
                 // Fallback if AI didn't return valid JSON
+                console.warn("AI returned invalid JSON, falling back.", content);
                 return {
                     type: 'Unknown',
-                    priority: 'Low',
+                    urgency: 'ROUTINE',
+                    cipher_status: 'CLEAR',
+                    callsign_source: 'UNKNOWN',
+                    callsign_dest: 'UNKNOWN',
                     summary: content.substring(0, 50) + "...",
-                    entities: []
+                    keywords: []
                 };
             }
         } catch (error) {
             console.error("AI Analysis Error:", error);
+            // Fallback for network error
             return {
                 type: 'Error',
-                priority: 'Low',
-                summary: "Analysis Failed",
-                entities: []
+                urgency: 'ROUTINE',
+                cipher_status: 'UNKNOWN',
+                callsign_source: 'N/A',
+                callsign_dest: 'N/A',
+                summary: "Analysis Failed: " + error.message,
+                keywords: []
             };
         }
     }

@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Radio Assistant</title>
+    <title>AI SIGINT TERMINAL</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app-container">
         <header class="toolbar">
             <div class="brand">
-                <h1>AI Radio <span class="version">MILSPEC</span></h1>
+                <h1>SIGINT <span class="version">MILSPEC</span></h1>
+                <div id="threat-container">THREAT: <span id="threat-level">DEFCON 5</span></div>
             </div>
             <div class="controls">
                 <div class="control-group">
                     <label>Freq (Hz)</label>
                     <div class="input-group">
-                        <input type="number" id="freq-input" value="144000000">
+                        <input type="number" id="freq-input" value="11175000">
                         <button id="scan-button" class="btn small">SCAN</button>
                     </div>
                 </div>
@@ -32,8 +33,8 @@
                 </div>
                 <div class="control-group">
                     <div class="input-group">
-                        <button id="mic-toggle" class="btn">Start Mic</button>
-                        <button id="record-button" class="btn" title="Record Audio">● Rec</button>
+                        <button id="mic-toggle" class="btn">MIC</button>
+                        <button id="record-button" class="btn" title="Record Audio">● REC</button>
                     </div>
                     <select id="audio-source-select" class="mini-select">
                         <option value="mic">Microphone</option>
@@ -61,50 +62,58 @@
                     </div>
                 </div>
                 <div class="control-group right">
-                    <button id="settings-button" class="btn icon-btn">⚙️ Settings</button>
+                    <button id="settings-button" class="btn icon-btn">⚙️ CFG</button>
                 </div>
             </div>
         </header>
 
         <main class="dashboard">
-            <div class="visualizer-panel">
-                <canvas id="spectrum-canvas"></canvas>
-                <div class="signal-overlay">
-                    <div class="signal-meter">
-                        <div class="signal-label">RSSI</div>
-                        <div class="signal-bar-bg"><div id="rssi-bar" class="signal-bar-fill" style="width: 0%;"></div></div>
-                        <div id="rssi-value">-120 dBm</div>
+            <div class="top-row">
+                <div class="visualizer-panel">
+                    <div class="panel-label">SPECTRUM ANALYSIS</div>
+                    <canvas id="spectrum-canvas"></canvas>
+                    <div class="signal-overlay">
+                        <div class="signal-meter">
+                            <div class="signal-label">RSSI</div>
+                            <div class="signal-bar-bg"><div id="rssi-bar" class="signal-bar-fill" style="width: 0%;"></div></div>
+                            <div id="rssi-value">-120 dBm</div>
+                        </div>
                     </div>
+                </div>
+                <div class="map-panel">
+                    <div class="panel-label">GEOLOCATION TARGETS</div>
+                    <canvas id="map-canvas"></canvas>
+                    <div id="geo-coords" class="overlay-text">Loc: 34.05N 118.25W</div>
                 </div>
             </div>
 
             <div class="content-split">
                 <div class="panel decoder-panel">
                     <div class="panel-header">
-                        <h2>Raw Decoder</h2>
+                        <h2>Signal Intercept</h2>
                         <span class="badge" id="decoder-badge">Morse</span>
                     </div>
-                    <div id="decoder-output" class="scroll-area">Waiting for signal...</div>
+                    <div id="decoder-output" class="scroll-area">Waiting for signal intercept...</div>
                 </div>
 
                 <div class="panel tactical-panel">
                     <div class="panel-header">
-                        <h2>Tactical Log</h2>
+                        <h2>Tactical Analysis Log</h2>
                         <span class="badge alert" id="alert-badge">--</span>
                     </div>
                     <div id="tactical-log" class="scroll-area">
-                        <div class="log-entry system">System initialized. Monitoring active.</div>
+                        <div class="log-entry system">SIGINT Terminal Initialized. Monitoring global frequencies.</div>
                     </div>
                 </div>
 
                 <div class="panel chat-panel">
                     <div class="panel-header">
-                        <h2>AI Command</h2>
+                        <h2>Command Interface</h2>
                     </div>
                     <div id="chat-output" class="scroll-area">
                         <div class="chat-message system">
                             <span class="role">System:</span>
-                            <span class="content">Ready.</span>
+                            <span class="content">Ready for tasking.</span>
                         </div>
                     </div>
                     <div class="chat-input-area">
@@ -118,9 +127,7 @@
         <footer id="status-bar">
             <span id="system-status">System: ONLINE</span>
             <span class="spacer">|</span>
-            <span id="connection-status">Net: CONNECTED</span>
-            <span class="spacer">|</span>
-            <span id="geo-coords">Loc: 34.05N 118.25W (Sim)</span>
+            <span id="connection-status">Net: SECURE</span>
         </footer>
 
         <!-- Settings Modal -->
