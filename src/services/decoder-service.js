@@ -36,13 +36,6 @@ class DecoderService extends EventEmitter {
         return this.decoders[this.activeDecoder];
     }
 
-    getAvailableDecoders() {
-        return Object.keys(this.decoders).map(key => ({
-            id: key,
-            name: this.decoders[key].name
-        }));
-    }
-
     // Called by app when frequency changes
     setFrequency(freq) {
         this.currentFrequency = freq;
