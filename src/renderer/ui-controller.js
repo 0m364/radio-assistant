@@ -9,7 +9,7 @@ class UIController {
             'send-button', 'freq-input', 'mode-select', 'mic-toggle', 'record-button',
             'audio-source-select', 'decoder-select', 'settings-button', 'settings-panel',
             'save-settings', 'api-key', 'api-base', 'api-model',
-            'scan-button', 'auto-monitor-toggle', 'rssi-bar', 'rssi-value',
+            'scan-button', 'auto-monitor-toggle', 'auto-collect-toggle', 'rssi-bar', 'rssi-value',
             'tactical-log', 'alert-badge', 'system-status', 'geo-coords'
         ];
 

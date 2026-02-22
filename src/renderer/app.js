@@ -4,6 +4,7 @@ const SpectrumVisualizer = require('./spectrum-visualizer.js');
 const RadioService = require('../services/radio-service.js');
 const AIService = require('../services/ai-service.js');
 const DecoderService = require('../services/decoder-service.js');
+const CollectionService = require('../services/collection-service.js');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("App Initializing...");
@@ -56,6 +57,39 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // --- Collection Service Integration ---
+    if (UI.elements.autoCollectToggle) {
+        UI.elements.autoCollectToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                // Disable Auto-Mon to prevent double processing
+                if (UI.elements.autoMonitorToggle) {
+                    UI.elements.autoMonitorToggle.checked = false;
+                    UI.elements.autoMonitorToggle.disabled = true;
+                }
+
+                CollectionService.start();
+                if (UI.elements.scanButton) UI.elements.scanButton.disabled = true;
+            } else {
+                if (UI.elements.autoMonitorToggle) {
+                    UI.elements.autoMonitorToggle.disabled = false;
+                }
+
+                CollectionService.stop();
+                if (UI.elements.scanButton) UI.elements.scanButton.disabled = false;
+            }
+        });
+    }
+
+    CollectionService.on('status', (msg) => {
+        UI.setStatus(msg);
+    });
+
+    CollectionService.on('collection-hit', (data) => {
+        // Log to Tactical Log
+        UI.addTacticalLog(data.analysis);
+    });
+    // --------------------------------------
 
     // Initialize Spectrum Visualizer
     if (UI.elements.spectrum) {
