@@ -164,7 +164,7 @@ class AudioProcessor extends EventEmitter {
                 this.analyser.getByteTimeDomainData(this.dataArray);
                 let sum = 0;
                 for (let i = 0; i < this.dataArray.length; i += 1) {
-                    const value = (this.dataArray[i] - 128) / 128;
+                    const value = (this.dataArray[i] - 128) * 0.0078125;
                     sum += value * value;
                 }
                 const rms = Math.sqrt(sum / this.dataArray.length);
