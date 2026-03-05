@@ -5,8 +5,34 @@ async function runTests() {
     console.log("Running AI Service Tests...");
 
     const originalSendPrompt = AIService.sendPrompt;
+    const originalConfig = { ...AIService.config };
 
     try {
+        // Test Case 0: Configuration and Merging
+        console.log("- Test: Configuration and Merging");
+
+        // Reset to known state
+        AIService.configure({
+            apiKey: 'key1',
+            baseUrl: 'http://api1.test',
+            model: 'model1'
+        });
+        assert.strictEqual(AIService.config.apiKey, 'key1');
+        assert.strictEqual(AIService.config.baseUrl, 'http://api1.test');
+        assert.strictEqual(AIService.config.model, 'model1');
+
+        // Partial update
+        AIService.configure({ apiKey: 'key2' });
+        assert.strictEqual(AIService.config.apiKey, 'key2', "apiKey should be updated");
+        assert.strictEqual(AIService.config.baseUrl, 'http://api1.test', "baseUrl should be preserved");
+        assert.strictEqual(AIService.config.model, 'model1', "model should be preserved");
+
+        // Another partial update
+        AIService.configure({ model: 'model2', baseUrl: 'http://api2.test' });
+        assert.strictEqual(AIService.config.apiKey, 'key2', "apiKey should be preserved");
+        assert.strictEqual(AIService.config.baseUrl, 'http://api2.test', "baseUrl should be updated");
+        assert.strictEqual(AIService.config.model, 'model2', "model should be updated");
+
         // Test Case 1: Valid JSON response
         console.log("- Test: Valid JSON response");
         const mockResponse = {
@@ -66,8 +92,9 @@ async function runTests() {
         console.error(error);
         process.exit(1);
     } finally {
-        // Restore original method
+        // Restore original method and config
         AIService.sendPrompt = originalSendPrompt;
+        AIService.configure(originalConfig);
     }
 }
 
