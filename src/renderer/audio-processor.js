@@ -2,6 +2,8 @@ const EventEmitter = require('events');
 const { decodeFromMorse } = require('../common/morse.js');
 const { AUDIO_CONFIG } = require('../common/audio-config.js');
 
+const PCM_8BIT_SCALE = 1 / 128;
+
 class AudioProcessor extends EventEmitter {
     constructor() {
         super();
@@ -164,7 +166,7 @@ class AudioProcessor extends EventEmitter {
                 this.analyser.getByteTimeDomainData(this.dataArray);
                 let sum = 0;
                 for (let i = 0; i < this.dataArray.length; i += 1) {
-                    const value = (this.dataArray[i] - 128) * 0.0078125;
+                    const value = (this.dataArray[i] - 128) * PCM_8BIT_SCALE;
                     sum += value * value;
                 }
                 const rms = Math.sqrt(sum / this.dataArray.length);
