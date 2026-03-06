@@ -52,10 +52,10 @@ const MORSE_MAP = {
   "-": "-....-",
 };
 
-const REVERSE_MAP = Object.entries(MORSE_MAP).reduce((acc, [char, code]) => {
-  acc[code] = char;
-  return acc;
-}, {});
+const REVERSE_MAP = {};
+for (const char in MORSE_MAP) {
+  REVERSE_MAP[MORSE_MAP[char]] = char;
+}
 
 function encodeToMorse(text) {
   if (!text) return "";
