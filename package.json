@@ -20,8 +20,21 @@
       "package.json"
     ],
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage"
+      ],
       "category": "Utility"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.utilities"
     }
   },
   "repository": {
@@ -39,5 +52,8 @@
   "devDependencies": {
     "electron": "^40.6.0",
     "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
   }
 }
