@@ -12,7 +12,7 @@ class UIController {
             'save-settings', 'api-key', 'api-base', 'api-model',
             'scan-button', 'auto-monitor-toggle', 'auto-collect-toggle', 'rssi-bar', 'rssi-value',
             'tactical-log', 'alert-badge', 'system-status', 'geo-coords',
-            'map-canvas', 'threat-level' // New IDs
+            'map-canvas', 'threat-level', 'sdr-status' // New IDs
         ];
 
         ids.forEach(id => {
@@ -277,6 +277,23 @@ class UIController {
                  this.elements.alertBadge.textContent = entry.type || "--";
                  this.elements.alertBadge.classList.remove('active');
              }
+        }
+    }
+    updateSdrStatus(status) {
+        if (!this.elements.sdrStatus) return;
+
+        if (status.activeClientType === 'websdr') {
+            this.elements.sdrStatus.textContent = 'SDR: WEBSDR';
+            this.elements.sdrStatus.style.color = '#00ff00';
+        } else if (status.activeClientType === 'local-sdr') {
+            this.elements.sdrStatus.textContent = 'SDR: LOCAL (TCP)';
+            this.elements.sdrStatus.style.color = '#00ff00';
+        } else if (status.wsActive) {
+            this.elements.sdrStatus.textContent = 'SDR: WS READY';
+            this.elements.sdrStatus.style.color = '#ffff00';
+        } else {
+            this.elements.sdrStatus.textContent = 'SDR: OFFLINE';
+            this.elements.sdrStatus.style.color = '#ff0000';
         }
     }
 }

@@ -5,6 +5,7 @@ const RadioService = require('../services/radio-service.js');
 const AIService = require('../services/ai-service.js');
 const DecoderService = require('../services/decoder-service.js');
 const CollectionService = require('../services/collection-service.js');
+const SDRBridgeService = require('../services/sdr-bridge-service.js');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("App Initializing...");
@@ -14,6 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const initialState = RadioService.getState();
     UI.updateFrequency(initialState.frequency);
     UI.updateMode(initialState.mode);
+
+
+    // Subscribe to SDR Bridge Status
+    SDRBridgeService.on('status', (status) => {
+        UI.updateSdrStatus(status);
+    });
 
     // Subscribe to Radio State Changes to keep UI in sync
     RadioService.subscribe((state) => {
