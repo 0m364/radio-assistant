@@ -2,8 +2,8 @@ class AIService {
     constructor() {
         this.config = {
             apiKey: '',
-            baseUrl: '',
-            model: 'gpt-3.5-turbo'
+            baseUrl: 'http://localhost:11434/v1',
+            model: 'gemma3:8b'
         };
     }
 
