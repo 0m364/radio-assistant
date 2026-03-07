@@ -1,5 +1,9 @@
 An assistant ... For the radio
 
+02 MAR 2026 : tested with several offline available models Gemma 3 8B preforms the best for its size ..... smaller models can be used but must be fine tuned
+
+
+
 ## Offline Assistance with Gemma 3
 This project is configured out-of-the-box to work with Google's Gemma 3 model for offline AI assistance via [Ollama](https://ollama.com/). The 8B model is recommended (`gemma3:8b`) for its balance of performance and reasoning capabilities, although smaller variants can be used if finetuned for radio contexts.
 
