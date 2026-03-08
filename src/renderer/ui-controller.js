@@ -51,8 +51,10 @@ class UIController {
             // Grid
             ctx.strokeStyle = '#003300';
             ctx.lineWidth = 1;
-            for(let x=0; x<w; x+=20) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-            for(let y=0; y<h; y+=20) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+            ctx.beginPath();
+            for(let x=0; x<w; x+=20) { ctx.moveTo(x,0); ctx.lineTo(x,h); }
+            for(let y=0; y<h; y+=20) { ctx.moveTo(0,y); ctx.lineTo(w,y); }
+            ctx.stroke();
 
             // Random Targets
             if (Math.random() > 0.9) {
