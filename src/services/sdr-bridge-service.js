@@ -121,13 +121,28 @@ class SDRBridgeService extends EventEmitter {
     }
 
     handleWsMessage(data) {
+        // Basic type and null check
+        if (!data || typeof data !== 'object' || Array.isArray(data)) return;
+
         if (data.type === 'sdr_state') {
             const currentState = RadioService.getState();
-            if (data.frequency && data.frequency !== currentState.frequency) {
-                RadioService.setFrequency(data.frequency);
+
+            // Validate frequency: must be a positive number
+            if (typeof data.frequency === 'number' && data.frequency > 0 && Number.isFinite(data.frequency)) {
+                if (data.frequency !== currentState.frequency) {
+                    RadioService.setFrequency(data.frequency);
+                }
+            } else if (data.frequency !== undefined) {
+                console.warn('SDR Bridge: Invalid frequency received via WS', data.frequency);
             }
-            if (data.mode && data.mode !== currentState.mode) {
-                RadioService.setMode(data.mode);
+
+            // Validate mode: must be a non-empty string
+            if (typeof data.mode === 'string' && data.mode.length > 0) {
+                if (data.mode !== currentState.mode) {
+                    RadioService.setMode(data.mode);
+                }
+            } else if (data.mode !== undefined) {
+                console.warn('SDR Bridge: Invalid mode received via WS', data.mode);
             }
         }
     }
