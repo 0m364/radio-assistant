@@ -1,6 +1,7 @@
 An assistant ... For the radio
 
 02 MAR 2026 : tested with several offline available models Gemma 3 8B preforms the best for its size ..... smaller models can be used but must be fine tuned
+08 MAR 2026 : testing with Qwen 3 9B  is looking promising 
 
 
 
@@ -19,3 +20,4 @@ This project is configured out-of-the-box to work with Google's Gemma 3 model fo
 All credit to Google for the Gemma 3 model.
 * [Google Gemma 3 Documentation](https://ai.google.dev/gemma/docs)
 * [Google Gemma 3 Terms/License](https://ai.google.dev/gemma/terms)
+
