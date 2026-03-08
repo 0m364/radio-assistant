@@ -148,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Source Selection (Mic vs System)
     if (UI.elements.sourceSelect) {
         UI.elements.sourceSelect.addEventListener('change', (e) => {
-            const source = e.target.value;
             if (AudioProcessor.micStream) {
                 AudioProcessor.stopMic();
                 UI.elements.micToggle.textContent = 'Start Mic';
