@@ -242,14 +242,7 @@ function setupAIChat() {
         });
     }
 
-    async function handleChatSend() {
-        const input = UI.getChatInput();
-        if (!input.trim()) return;
-
-        UI.appendChatMessage('User', input);
-        UI.clearChatInput();
-
-        // Build context
+function buildSystemPrompt() {
         const radioState = RadioService.getState();
         const context = {
             radio: radioState,
@@ -257,7 +250,7 @@ function setupAIChat() {
             recentDecodedText: UI.elements.decoderOutput.textContent.slice(-200) // Last 200 chars
         };
 
-        const systemPrompt = `You are a semi-chatbot Radio Worker and RFML (Radio Frequency Machine Learning) expert.
+        return `You are a semi-chatbot Radio Worker and RFML (Radio Frequency Machine Learning) expert.
         Current Radio State: Freq=${radioState.frequency}Hz, Mode=${radioState.mode}.
         Active Decoder: ${context.decoder}.
         Recent Decoded Text: "${context.recentDecodedText}".
@@ -266,6 +259,41 @@ function setupAIChat() {
         If the user asks you to tune the radio or change the frequency, you can do so by including <TUNE:123456> in your response (where 123456 is the frequency in Hz).
         If the user asks you to change the mode, include <MODE:USB> (or FM, AM, LSB, CW) in your response.
         Answer naturally and provide insights on RF signatures, signal intelligence, and radio operations.`;
+    }
+
+    function processAICommands(response) {
+        let responseText = response;
+        try {
+            const tuneMatch = response.match(/<TUNE:(\d+)>/i);
+            if (tuneMatch) {
+                const freq = parseInt(tuneMatch[1], 10);
+                RadioService.setFrequency(freq);
+                UI.updateFrequency(freq);
+                responseText += `\n[System: Tuned to ${freq} Hz]`;
+            }
+            const modeMatch = response.match(/<MODE:([A-Z]+)>/i);
+            if (modeMatch) {
+                const mode = modeMatch[1].toUpperCase();
+                RadioService.setMode(mode);
+                UI.updateMode(mode);
+                responseText += `\n[System: Mode set to ${mode}]`;
+            }
+            // Strip the tags from the final chat display to make it natural
+            responseText = responseText.replace(/<TUNE:\d+>/gi, '').replace(/<MODE:[A-Z]+>/gi, '').trim();
+        } catch (e) {
+            console.error("Failed to parse AI command", e);
+        }
+        return responseText;
+    }
+
+    async function handleChatSend() {
+        const input = UI.getChatInput();
+        if (!input.trim()) return;
+
+        UI.appendChatMessage('User', input);
+        UI.clearChatInput();
+
+        const systemPrompt = buildSystemPrompt();
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -277,28 +305,7 @@ function setupAIChat() {
             const response = await AIService.sendPrompt(messages);
             UI.setStatus("AI Ready");
 
-            // Check for commands like <TUNE:123456> or <MODE:FM>
-            let responseText = response;
-            try {
-                const tuneMatch = response.match(/<TUNE:(\d+)>/i);
-                if (tuneMatch) {
-                    const freq = parseInt(tuneMatch[1], 10);
-                    RadioService.setFrequency(freq);
-                    UI.updateFrequency(freq);
-                    responseText += `\n[System: Tuned to ${freq} Hz]`;
-                }
-                const modeMatch = response.match(/<MODE:([A-Z]+)>/i);
-                if (modeMatch) {
-                    const mode = modeMatch[1].toUpperCase();
-                    RadioService.setMode(mode);
-                    UI.updateMode(mode);
-                    responseText += `\n[System: Mode set to ${mode}]`;
-                }
-                // Strip the tags from the final chat display to make it natural
-                responseText = responseText.replace(/<TUNE:\d+>/gi, '').replace(/<MODE:[A-Z]+>/gi, '').trim();
-            } catch (e) {
-                console.error("Failed to parse AI command", e);
-            }
+            const responseText = processAICommands(response);
 
             UI.appendChatMessage('Assistant', responseText);
         } catch (err) {
