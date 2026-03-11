@@ -1,11 +1,11 @@
-const UI = require('./ui-controller.js');
-const AudioProcessor = require('./audio-processor.js');
-const SpectrumVisualizer = require('./spectrum-visualizer.js');
-const RadioService = require('../services/radio-service.js');
-const AIService = require('../services/ai-service.js');
-const DecoderService = require('../services/decoder-service.js');
-const CollectionService = require('../services/collection-service.js');
-const SDRBridgeService = require('../services/sdr-bridge-service.js');
+var UI = require('./ui-controller.js');
+var AudioProcessor = require('./audio-processor.js');
+var SpectrumVisualizer = require('./spectrum-visualizer.js');
+var RadioService = require('../services/radio-service.js');
+var AIService = require('../services/ai-service.js');
+var DecoderService = require('../services/decoder-service.js');
+var CollectionService = require('../services/collection-service.js');
+var SDRBridgeService = require('../services/sdr-bridge-service.js');
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("App Initializing...");
