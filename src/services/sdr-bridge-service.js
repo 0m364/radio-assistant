@@ -221,6 +221,17 @@ class SDRBridgeService extends EventEmitter {
     }
 
     sendTcpCommand(cmd) {
+        // Validate command to prevent arbitrary RigCtl command injection
+        // Allowed commands:
+        // 'f' : Get frequency
+        // 'm' : Get mode
+        // 'F <freq>' : Set frequency (where <freq> is numeric)
+        // 'M <mode> -1' : Set mode (where <mode> is an alphanumeric string, followed by passband)
+        if (typeof cmd !== 'string' || !/^(f|m|F \d+|M [a-zA-Z0-9]+ -1)$/.test(cmd)) {
+            console.warn('SDR Bridge: Blocked invalid TCP command', cmd);
+            return;
+        }
+
         if (this.status.tcpActive && this.tcpClient && !this.tcpClient.destroyed) {
             this.tcpClient.write(cmd + '\n');
         }
