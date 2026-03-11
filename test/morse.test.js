@@ -28,7 +28,7 @@ function runTests() {
 
         // Test Case 6: Unknown characters
         console.log("- Test: Unknown characters ($#)");
-        assert.strictEqual(encodeToMorse("$#"), "? ?");
+        assert.strictEqual(encodeToMorse("$#"), "$ #");
 
         // Test Case 7: Empty/Null/Undefined input
         console.log("- Test: Empty/Null/Undefined input");
@@ -43,7 +43,7 @@ function runTests() {
 
         // Test Case 9: Mixed known and unknown
         console.log("- Test: Mixed characters");
-        assert.strictEqual(encodeToMorse("A B$"), ".- / -... ?");
+        assert.strictEqual(encodeToMorse("A B$"), ".- / -... $");
 
         console.log("\nAll Morse Encoder tests passed!");
     } catch (error) {

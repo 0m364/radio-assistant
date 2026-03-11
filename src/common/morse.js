@@ -65,7 +65,7 @@ function encodeToMorse(text) {
     .split("")
     .map((char) => {
       if (char === " ") return "/";
-      return MORSE_MAP[char] || "?";
+      return MORSE_MAP[char] || char;
     })
     .join(" ")
     .replace(/\s+\/\s+/g, " / ")
@@ -90,7 +90,7 @@ function decodeFromMorse(morse) {
       return word
         .split(" ")
         .filter(Boolean)
-        .map((code) => REVERSE_MAP[code] || "?")
+        .map((code) => REVERSE_MAP[code] || code)
         .join("");
     })
     .join(" ")

@@ -16,6 +16,12 @@ const cases = [
     text: "2026",
     morse: "..--- ----- ..--- -....",
   },
+  {
+    name: "unknown characters",
+    text: "Hello ~",
+    morse: ".... . .-.. .-.. --- / ~",
+    decodeExpected: "HELLO ~",
+  },
 ];
 
 const assertEqual = (actual, expected, label) => {
@@ -29,7 +35,8 @@ cases.forEach((testCase) => {
   assertEqual(encoded, testCase.morse, `${testCase.name} encode`);
 
   const decoded = decodeFromMorse(testCase.morse);
-  assertEqual(decoded, testCase.text.toUpperCase(), `${testCase.name} decode`);
+  const expectedDecode = testCase.decodeExpected || testCase.text.toUpperCase();
+  assertEqual(decoded, expectedDecode, `${testCase.name} decode`);
 });
 
 console.log("All tests passed.");
