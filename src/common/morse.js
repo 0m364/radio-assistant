@@ -53,9 +53,7 @@ const MORSE_MAP = {
 };
 
 const REVERSE_MAP = {};
-for (const char in MORSE_MAP) {
-  REVERSE_MAP[MORSE_MAP[char]] = char;
-}
+Object.entries(MORSE_MAP).forEach(([char, code]) => REVERSE_MAP[code] = char);
 
 function encodeToMorse(text) {
   if (!text) return "";
