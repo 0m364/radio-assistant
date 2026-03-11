@@ -1,5 +1,5 @@
 const assert = require('node:assert');
-const { encodeToMorse } = require('../src/common/morse.js');
+const { encodeToMorse, decodeFromMorse } = require('../src/common/morse.js');
 
 function runTests() {
     console.log("Running Morse Encoder Tests...");
@@ -47,7 +47,29 @@ function runTests() {
 
         console.log("\nAll Morse Encoder tests passed!");
     } catch (error) {
-        console.error("\nTests FAILED!");
+        console.error("\nEncoder Tests FAILED!");
+        console.error(error);
+        process.exit(1);
+    }
+
+    console.log("\nRunning Morse Decoder Tests...");
+    try {
+        // Test Case 1: Basic decoding
+        console.log("- Test: Basic decoding (... --- ...)");
+        assert.strictEqual(decodeFromMorse("... --- ..."), "SOS");
+
+        // Test Case 2: Numbers and punctuation
+        console.log("- Test: Numbers and punctuation");
+        assert.strictEqual(decodeFromMorse(".---- ..--- ...-- -.-.--"), "123!");
+
+        // Test Case 3: Single letters
+        console.log("- Test: Single letters");
+        assert.strictEqual(decodeFromMorse(".-"), "A");
+        assert.strictEqual(decodeFromMorse("-..."), "B");
+
+        console.log("\nAll Morse Decoder tests passed!");
+    } catch (error) {
+        console.error("\nDecoder Tests FAILED!");
         console.error(error);
         process.exit(1);
     }
