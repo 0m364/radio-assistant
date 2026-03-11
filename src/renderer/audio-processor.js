@@ -165,11 +165,27 @@ class AudioProcessor extends EventEmitter {
             const loop = () => {
                 this.analyser.getByteTimeDomainData(this.dataArray);
                 let sum = 0;
-                for (let i = 0; i < this.dataArray.length; i += 1) {
-                    const value = (this.dataArray[i] - 128) * PCM_8BIT_SCALE;
-                    sum += value * value;
+                const len = this.dataArray.length;
+                let i = 0;
+
+                // Unroll loop for performance since this runs ~60fps
+                for (; i <= len - 8; i += 8) {
+                    const v0 = this.dataArray[i] - 128;
+                    const v1 = this.dataArray[i + 1] - 128;
+                    const v2 = this.dataArray[i + 2] - 128;
+                    const v3 = this.dataArray[i + 3] - 128;
+                    const v4 = this.dataArray[i + 4] - 128;
+                    const v5 = this.dataArray[i + 5] - 128;
+                    const v6 = this.dataArray[i + 6] - 128;
+                    const v7 = this.dataArray[i + 7] - 128;
+                    sum += v0 * v0 + v1 * v1 + v2 * v2 + v3 * v3 + v4 * v4 + v5 * v5 + v6 * v6 + v7 * v7;
                 }
-                const rms = Math.sqrt(sum / this.dataArray.length);
+                for (; i < len; i += 1) {
+                    const v = this.dataArray[i] - 128;
+                    sum += v * v;
+                }
+
+                const rms = Math.sqrt(sum / len) * PCM_8BIT_SCALE;
                 this.emit('level', rms);
                 this.processLevel(this.micState, rms, performance.now());
                 this.micAnimation = requestAnimationFrame(loop);
