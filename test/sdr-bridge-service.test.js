@@ -121,6 +121,42 @@ function runTests() {
     RadioService.setFrequency(initialState.frequency);
     RadioService.setMode(initialState.mode);
 
+    // --- Test Security Validation for sendTcpCommand ---
+    console.log('\n- Test: Security validation for sendTcpCommand');
+
+    // We need to simulate the TCP client being active to reach the write() call.
+    sdrBridgeService.status.tcpActive = true;
+
+    // We will spy on the mock socket write method
+    let lastWrittenCommand = null;
+    sdrBridgeService.tcpClient = {
+        destroyed: false,
+        write: (data) => {
+            lastWrittenCommand = data;
+        }
+    };
+
+    // Helper to reset and check
+    const checkCmd = (cmd, expectedWritten) => {
+        lastWrittenCommand = null;
+        sdrBridgeService.sendTcpCommand(cmd);
+        assert.strictEqual(lastWrittenCommand, expectedWritten, `Failed for command: ${cmd}`);
+    };
+
+    // Valid commands
+    checkCmd('f', 'f\n');
+    checkCmd('m', 'm\n');
+    checkCmd('F 14200000', 'F 14200000\n');
+    checkCmd('M USB -1', 'M USB -1\n');
+
+    // Invalid/Malicious commands
+    checkCmd('F 14200000\nrm -rf /', null); // injection attempt
+    checkCmd('f\nF 14200000', null); // multi-command
+    checkCmd('F abc', null); // invalid frequency format
+    checkCmd('M USB -2', null); // invalid passband format
+    checkCmd({ type: 'f' }, null); // invalid type
+    checkCmd(null, null); // invalid type
+
     console.log('\nAll SDR Bridge Service tests passed!');
 }
 
