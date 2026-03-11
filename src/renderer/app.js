@@ -11,11 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("App Initializing...");
     UI.init();
 
+    setupRadioSubscriptions();
+    setupDecoderAndCollection();
+    setupAudioAndVisualizer();
+    setupUIControls();
+    setupAIChat();
+    setupSettings();
+});
+
+function setupRadioSubscriptions() {
     // Initialize Radio State Display
     const initialState = RadioService.getState();
     UI.updateFrequency(initialState.frequency);
     UI.updateMode(initialState.mode);
-
 
     // Subscribe to SDR Bridge Status
     SDRBridgeService.on('status', (status) => {
@@ -44,7 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+}
 
+function setupDecoderAndCollection() {
     // Listen to Decoder Service for Simulated or Real Traffic
     DecoderService.on('decoded', async (data) => {
         // Raw Output
@@ -96,8 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Log to Tactical Log
         UI.addTacticalLog(data.analysis);
     });
-    // --------------------------------------
+}
 
+function setupAudioAndVisualizer() {
     // Initialize Spectrum Visualizer
     if (UI.elements.spectrum) {
         const visualizer = new SpectrumVisualizer(UI.elements.spectrum);
@@ -118,7 +129,9 @@ document.addEventListener('DOMContentLoaded', () => {
     AudioProcessor.on('morse', (morse) => {
         // Optional: show morse dots/dashes somewhere
     });
+}
 
+function setupUIControls() {
     // Scan Button
     if (UI.elements.scanButton) {
         UI.elements.scanButton.addEventListener('click', () => {
@@ -205,6 +218,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Radio Controls
+    if (UI.elements.freqInput) {
+        UI.elements.freqInput.addEventListener('change', (e) => {
+            RadioService.setFrequency(Number(e.target.value));
+        });
+    }
+    if (UI.elements.modeSelect) {
+        UI.elements.modeSelect.addEventListener('change', (e) => {
+            RadioService.setMode(e.target.value);
+        });
+    }
+}
+
+function setupAIChat() {
     // AI Chat
     if (UI.elements.sendButton) {
         UI.elements.sendButton.addEventListener('click', handleChatSend);
@@ -279,7 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
             UI.appendChatMessage('System', `Error: ${err.message}`);
         }
     }
+}
 
+function setupSettings() {
     // Settings Panel
     if (UI.elements.settingsButton) {
         UI.elements.settingsButton.addEventListener('click', () => UI.toggleSettings());
@@ -293,16 +322,4 @@ document.addEventListener('DOMContentLoaded', () => {
             UI.setStatus("Settings saved");
         });
     }
-
-    // Radio Controls
-    if (UI.elements.freqInput) {
-        UI.elements.freqInput.addEventListener('change', (e) => {
-            RadioService.setFrequency(Number(e.target.value));
-        });
-    }
-    if (UI.elements.modeSelect) {
-        UI.elements.modeSelect.addEventListener('change', (e) => {
-            RadioService.setMode(e.target.value);
-        });
-    }
-});
+}
