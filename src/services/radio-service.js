@@ -83,20 +83,16 @@ class RadioService {
 
     updateSignalMetrics() {
         const metrics = this.calculateSignalMetrics(this.state.frequency);
-        let changed = false;
 
         // Update frequency-dependent state
         if (this.state.rssi !== metrics.rssi) {
             this.state.rssi = metrics.rssi;
-            changed = true;
         }
         if (this.state.snr !== metrics.snr) {
             this.state.snr = metrics.snr;
-            changed = true;
         }
         if (this.state.isSignalPresent !== metrics.present) {
             this.state.isSignalPresent = metrics.present;
-            changed = true;
         }
 
         // Always notify on frequency change (called by setFrequency),
