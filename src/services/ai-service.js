@@ -85,7 +85,7 @@ class AIService {
                     return JSON.parse(jsonMatch[0]);
                 }
                 return JSON.parse(content);
-            } catch (e) {
+            } catch {
                 // Fallback if AI didn't return valid JSON
                 console.warn("AI returned invalid JSON, falling back.", content);
                 return {
