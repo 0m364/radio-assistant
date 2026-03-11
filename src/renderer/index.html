@@ -158,6 +158,36 @@
         </div>
     </div>
 
+
+    <!-- Mini CommonJS Loader to maintain require() functionality -->
+    <script>
+        window.module = { exports: {} };
+        window.exports = window.module.exports;
+        window.registeredModules = {};
+        window.require = function(modulePath) {
+            if (modulePath.startsWith('../services/')) {
+                return window.electronAPI.requireService(modulePath);
+            }
+            if (modulePath === 'events') {
+                return window.electronAPI.EventEmitter;
+            }
+            if (window.registeredModules[modulePath]) {
+                return window.registeredModules[modulePath];
+            }
+            throw new Error("Module not found: " + modulePath);
+        };
+        function registerModule(path) {
+            window.registeredModules[path] = window.module.exports;
+            window.module.exports = {};
+            window.exports = window.module.exports;
+        }
+    </script>
+    <script src="../common/audio-config.js"></script><script>registerModule('../common/audio-config.js')</script>
+    <script src="../common/morse.js"></script><script>registerModule('../common/morse.js')</script>
+    <script src="ui-controller.js"></script><script>registerModule('./ui-controller.js')</script>
+    <script src="spectrum-visualizer.js"></script><script>registerModule('./spectrum-visualizer.js')</script>
+    <script src="audio-processor.js"></script><script>registerModule('./audio-processor.js')</script>
+
     <script src="app.js"></script>
 </body>
 </html>
