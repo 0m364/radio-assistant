@@ -129,53 +129,68 @@ class AudioProcessor extends EventEmitter {
         };
     }
 
+    async requestMediaStream(useSystem) {
+        let stream;
+        if (useSystem) {
+            stream = await navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: {
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: false,
+                }
+            });
+        } else {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+
+        if (stream.getAudioTracks().length === 0) {
+            throw new Error("No audio track selected");
+        }
+
+        return stream;
+    }
+
+    setupAudioGraph(stream) {
+        this.initAudioContext();
+        const source = this.audioContext.createMediaStreamSource(stream);
+        this.analyser = this.audioContext.createAnalyser();
+        this.analyser.fftSize = 2048;
+        this.dataArray = new Uint8Array(this.analyser.fftSize);
+        source.connect(this.analyser);
+    }
+
+    startAudioProcessingLoop() {
+        const loop = () => {
+            this.analyser.getByteTimeDomainData(this.dataArray);
+            let sum = 0;
+            for (let i = 0; i < this.dataArray.length; i += 1) {
+                const value = (this.dataArray[i] - 128) * PCM_8BIT_SCALE;
+                sum += value * value;
+            }
+            const rms = Math.sqrt(sum / this.dataArray.length);
+            this.emit('level', rms);
+            this.processLevel(this.micState, rms, performance.now());
+            this.micAnimation = requestAnimationFrame(loop);
+        };
+
+        this.micAnimation = requestAnimationFrame(loop);
+    }
+
     async startMic(useSystem = false) {
         if (this.micStream) return;
         this.emit('status', useSystem ? "Requesting audio..." : "Requesting mic...");
 
         try {
-            if (useSystem) {
-                this.micStream = await navigator.mediaDevices.getDisplayMedia({
-                    video: true,
-                    audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false,
-                    }
-                });
-            } else {
-                this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            }
+            this.micStream = await this.requestMediaStream(useSystem);
 
-            if (this.micStream.getAudioTracks().length === 0) {
-                throw new Error("No audio track selected");
-            }
-
-            this.initAudioContext();
-            const source = this.audioContext.createMediaStreamSource(this.micStream);
-            this.analyser = this.audioContext.createAnalyser();
-            this.analyser.fftSize = 2048;
-            this.dataArray = new Uint8Array(this.analyser.fftSize);
-            source.connect(this.analyser);
+            this.setupAudioGraph(this.micStream);
 
             this.micState = this.createAudioState();
             this.emit('status', 'Listening');
             this.emit('analyser', this.analyser);
 
-            const loop = () => {
-                this.analyser.getByteTimeDomainData(this.dataArray);
-                let sum = 0;
-                for (let i = 0; i < this.dataArray.length; i += 1) {
-                    const value = (this.dataArray[i] - 128) * PCM_8BIT_SCALE;
-                    sum += value * value;
-                }
-                const rms = Math.sqrt(sum / this.dataArray.length);
-                this.emit('level', rms);
-                this.processLevel(this.micState, rms, performance.now());
-                this.micAnimation = requestAnimationFrame(loop);
-            };
-
-            this.micAnimation = requestAnimationFrame(loop);
+            this.startAudioProcessingLoop();
         } catch (error) {
             console.error(error);
             this.emit('status', "Audio blocked");
