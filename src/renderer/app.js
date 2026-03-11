@@ -126,7 +126,7 @@ function setupAudioAndVisualizer() {
         UI.updateDecoderBuffer(text);
     });
 
-    AudioProcessor.on('morse', (morse) => {
+    AudioProcessor.on('morse', () => {
         // Optional: show morse dots/dashes somewhere
     });
 }
