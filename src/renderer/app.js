@@ -230,14 +230,15 @@ document.addEventListener('DOMContentLoaded', () => {
             recentDecodedText: UI.elements.decoderOutput.textContent.slice(-200) // Last 200 chars
         };
 
-        const systemPrompt = `You are an AI Radio Assistant.
+        const systemPrompt = `You are a semi-chatbot Radio Worker and RFML (Radio Frequency Machine Learning) expert.
         Current Radio State: Freq=${radioState.frequency}Hz, Mode=${radioState.mode}.
         Active Decoder: ${context.decoder}.
         Recent Decoded Text: "${context.recentDecodedText}".
 
-        If the user asks to tune to a frequency, reply with a JSON block: {"action": "TUNE", "frequency": 123456}.
-        If the user asks to change mode, reply with: {"action": "MODE", "mode": "FM"}.
-        Otherwise, answer normally.`;
+        Act as a helpful, conversational radio operator.
+        If the user asks you to tune the radio or change the frequency, you can do so by including <TUNE:123456> in your response (where 123456 is the frequency in Hz).
+        If the user asks you to change the mode, include <MODE:USB> (or FM, AM, LSB, CW) in your response.
+        Answer naturally and provide insights on RF signatures, signal intelligence, and radio operations.`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -249,23 +250,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await AIService.sendPrompt(messages);
             UI.setStatus("AI Ready");
 
-            // Check for JSON commands
+            // Check for commands like <TUNE:123456> or <MODE:FM>
             let responseText = response;
             try {
-                // simple heuristic to find json block
-                const jsonMatch = response.match(/\{.*"action":.*\}/s);
-                if (jsonMatch) {
-                    const command = JSON.parse(jsonMatch[0]);
-                    if (command.action === 'TUNE') {
-                        RadioService.setFrequency(command.frequency);
-                        UI.updateFrequency(command.frequency);
-                        responseText += `\n[System: Tuned to ${command.frequency} Hz]`;
-                    } else if (command.action === 'MODE') {
-                        RadioService.setMode(command.mode);
-                        UI.updateMode(command.mode);
-                        responseText += `\n[System: Mode set to ${command.mode}]`;
-                    }
+                const tuneMatch = response.match(/<TUNE:(\d+)>/i);
+                if (tuneMatch) {
+                    const freq = parseInt(tuneMatch[1], 10);
+                    RadioService.setFrequency(freq);
+                    UI.updateFrequency(freq);
+                    responseText += `\n[System: Tuned to ${freq} Hz]`;
                 }
+                const modeMatch = response.match(/<MODE:([A-Z]+)>/i);
+                if (modeMatch) {
+                    const mode = modeMatch[1].toUpperCase();
+                    RadioService.setMode(mode);
+                    UI.updateMode(mode);
+                    responseText += `\n[System: Mode set to ${mode}]`;
+                }
+                // Strip the tags from the final chat display to make it natural
+                responseText = responseText.replace(/<TUNE:\d+>/gi, '').replace(/<MODE:[A-Z]+>/gi, '').trim();
             } catch (e) {
                 console.error("Failed to parse AI command", e);
             }

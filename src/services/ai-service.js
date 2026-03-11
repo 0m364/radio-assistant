@@ -3,7 +3,7 @@ class AIService {
         this.config = {
             apiKey: '',
             baseUrl: 'http://localhost:11434/v1',
-            model: 'gemma3:8b'
+            model: 'rfml'
         };
     }
 
@@ -53,7 +53,7 @@ class AIService {
     }
 
     async analyzeTraffic(text) {
-        const systemPrompt = `You are a Military SIGINT Analyst. Analyze the intercepted radio transmission.
+        const systemPrompt = `You are an RFML (Radio Frequency Machine Learning) Analyst and Radio Worker. Analyze the intercepted radio transmission.
 
         Return a JSON object with these EXACT keys:
         - type: (e.g., "Military Air", "HFGCS", "Numbers Station", "Maritime", "Civilian", "Unknown")
