@@ -172,73 +172,43 @@ class UIController {
         }
     }
 
+    _createElement(tag, className, textContent = '') {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (textContent) el.textContent = textContent;
+        return el;
+    }
+
     addTacticalLog(entry) {
         if (!this.elements.tacticalLog) return;
 
-        const div = document.createElement('div');
-        div.className = `log-entry ${entry.urgency ? entry.urgency.toLowerCase() : 'routine'}`;
-
+        const div = this._createElement('div', `log-entry ${entry.urgency ? entry.urgency.toLowerCase() : 'routine'}`);
         const time = new Date().toLocaleTimeString('en-US', { hour12: false });
 
-        // 1. Timestamp
-        const tsSpan = document.createElement('span');
-        tsSpan.className = 'timestamp';
-        tsSpan.textContent = `[${time}]`;
-        div.appendChild(tsSpan);
+        div.append(this._createElement('span', 'timestamp', `[${time}]`));
 
-        // 2. Encryption Badge
         if (entry.cipher_status === 'ENCRYPTED' || entry.cipher_status === 'CODED') {
-            const badge = document.createElement('span');
-            badge.className = 'badge alert';
-            badge.textContent = `🔒 ${entry.cipher_status}`;
-            div.appendChild(document.createTextNode(' '));
-            div.appendChild(badge);
+            div.append(' ', this._createElement('span', 'badge alert', `🔒 ${entry.cipher_status}`));
         }
 
-        // 3. Urgency Badge
         if (entry.urgency === 'FLASH' || entry.urgency === 'IMMEDIATE') {
-            const badge = document.createElement('span');
-            badge.className = 'badge alert blink';
-            badge.textContent = entry.urgency;
-            div.appendChild(document.createTextNode(' '));
-            div.appendChild(badge);
+            div.append(' ', this._createElement('span', 'badge alert blink', entry.urgency));
         }
 
-        // 4. Type
-        const typeSpan = document.createElement('span');
-        typeSpan.className = 'type';
-        typeSpan.textContent = ` [${entry.type || 'UNK'}] `;
-        div.appendChild(typeSpan);
+        div.append(this._createElement('span', 'type', ` [${entry.type || 'UNK'}] `));
 
-        // 5. Callsigns
         if (entry.callsign_source && entry.callsign_source !== 'UNKNOWN') {
-             const sourceSpan = document.createElement('span');
-             sourceSpan.className = 'callsign';
-             sourceSpan.textContent = entry.callsign_source;
-             div.appendChild(sourceSpan);
-
+             div.append(this._createElement('span', 'callsign', entry.callsign_source));
              if (entry.callsign_dest && entry.callsign_dest !== 'UNKNOWN') {
-                 div.appendChild(document.createTextNode(' -> '));
-                 const destSpan = document.createElement('span');
-                 destSpan.className = 'callsign';
-                 destSpan.textContent = entry.callsign_dest;
-                 div.appendChild(destSpan);
+                 div.append(' -> ', this._createElement('span', 'callsign', entry.callsign_dest));
              }
-             div.appendChild(document.createTextNode(': '));
+             div.append(': ');
         }
 
-        // 6. Summary
-        const sumSpan = document.createElement('span');
-        sumSpan.className = 'summary';
-        sumSpan.textContent = entry.summary;
-        div.appendChild(sumSpan);
+        div.append(this._createElement('span', 'summary', entry.summary));
 
-        // 7. Keywords
         if (entry.keywords && entry.keywords.length > 0) {
-            const kwDiv = document.createElement('div');
-            kwDiv.className = 'keywords';
-            kwDiv.textContent = `KEYS: ${entry.keywords.join(', ')}`;
-            div.appendChild(kwDiv);
+            div.append(this._createElement('div', 'keywords', `KEYS: ${entry.keywords.join(', ')}`));
         }
 
         this.elements.tacticalLog.prepend(div);
