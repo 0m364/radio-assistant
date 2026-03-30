@@ -73,28 +73,52 @@ function encodeToMorse(text) {
     .trim();
 }
 
+/**
+ * Decodes Morse code into text using an optimized imperative loop.
+ * This avoids multiple intermediate array allocations and string transformations.
+ */
 function decodeFromMorse(morse) {
   if (!morse) return "";
 
-  const normalized = morse
-    .replace(/\n/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const result = [];
+  let word = "";
+  let code = "";
+  let hasWord = false;
 
-  if (!normalized) return "";
+  for (let i = 0; i < morse.length; i++) {
+    const char = morse[i];
+    if (char === "/") {
+      if (code) {
+        word += REVERSE_MAP[code] || code;
+        code = "";
+        hasWord = true;
+      }
+      if (hasWord || result.length > 0) {
+        result.push(word);
+        word = "";
+        hasWord = false;
+      }
+    } else if (char === " " || char === "\n" || char === "\r" || char === "\t") {
+      if (code) {
+        word += REVERSE_MAP[code] || code;
+        code = "";
+        hasWord = true;
+      }
+    } else {
+      code += char;
+    }
+  }
 
-  const words = normalized.split(/\s*\/\s*/);
-  return words
-    .map((word) => {
-      if (!word) return "";
-      return word
-        .split(" ")
-        .filter(Boolean)
-        .map((code) => REVERSE_MAP[code] || code)
-        .join("");
-    })
-    .join(" ")
-    .trim();
+  // Final flush of any pending code and word
+  if (code) {
+    word += REVERSE_MAP[code] || code;
+    hasWord = true;
+  }
+  if (hasWord || result.length > 0) {
+    result.push(word);
+  }
+
+  return result.join(" ").trim();
 }
 
 function getGuideSamples() {
