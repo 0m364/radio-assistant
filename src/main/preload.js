@@ -1,96 +1,75 @@
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-const RadioService = require('../services/radio-service.js');
-const AIService = require('../services/ai-service.js');
-const DecoderService = require('../services/decoder-service.js');
-const CollectionService = require('../services/collection-service.js');
-const SDRBridgeService = require('../services/sdr-bridge-service.js');
+class EventEmitter {
+    constructor() { this.listeners = {}; }
+    on(event, cb) { (this.listeners[event] = this.listeners[event] || []).push(cb); return this; }
+    once(event, cb) {
+        const wrapper = (...args) => { cb(...args); this.off(event, wrapper); };
+        return this.on(event, wrapper);
+    }
+    off(event, cb) {
+        if (this.listeners[event]) {
+            this.listeners[event] = this.listeners[event].filter(l => l !== cb);
+        }
+        return this;
+    }
+    emit(event, ...args) {
+        if (this.listeners[event]) {
+            this.listeners[event].slice().forEach(cb => cb(...args));
+        }
+        return true;
+    }
+    removeAllListeners(event) {
+        if (event) delete this.listeners[event];
+        else this.listeners = {};
+        return this;
+    }
+}
 
-const safeServices = {
-    '../services/radio-service.js': RadioService,
-    '../services/ai-service.js': AIService,
-    '../services/decoder-service.js': DecoderService,
-    '../services/collection-service.js': CollectionService,
-    '../services/sdr-bridge-service.js': SDRBridgeService
-};
+// Fetch initial states from Main process synchronously
+const initialStates = ipcRenderer.sendSync('get-all-states-sync');
+
+const serviceProxies = {};
 
 contextBridge.exposeInMainWorld('electronAPI', {
     requireService: (modulePath) => {
-        if (safeServices.hasOwnProperty(modulePath)) {
-            const service = safeServices[modulePath];
-            const proxy = {};
-            const listenerMap = new WeakMap();
+        if (serviceProxies[modulePath]) return serviceProxies[modulePath];
 
-            for (const key in service) {
-                if (typeof service[key] === 'function') {
-                    if (key === 'on' || key === 'once') {
-                        proxy[key] = (event, listener) => {
-                            let wrapper = listenerMap.get(listener);
-                            if (!wrapper) {
-                                wrapper = (...args) => listener(...args);
-                                listenerMap.set(listener, wrapper);
-                            }
-                            service[key](event, wrapper);
-                            return proxy;
-                        };
-                    } else if (key === 'off' || key === 'removeListener') {
-                        proxy[key] = (event, listener) => {
-                            const wrapper = listenerMap.get(listener);
-                            if (wrapper) {
-                                service[key](event, wrapper);
-                            }
-                            return proxy;
-                        };
-                    } else if (key === 'emit') {
-                        proxy[key] = (event, ...args) => service.emit(event, ...args);
-                    } else if (key === 'removeAllListeners') {
-                        proxy[key] = (event) => service.removeAllListeners(event);
-                    } else {
-                        proxy[key] = service[key].bind(service);
-                    }
-                } else {
-                    Object.defineProperty(proxy, key, {
-                        get: () => service[key],
-                        enumerable: true
-                    });
+        const emitter = new EventEmitter();
+        const state = initialStates[modulePath] || {};
+
+        const proxy = new Proxy(emitter, {
+            get(target, prop) {
+                if (prop in target) return target[prop];
+                if (prop === 'getState') return () => state;
+                if (prop === 'state') return state;
+                if (prop === 'subscribe') {
+                    return (listener) => {
+                        emitter.on('state-update', listener);
+                        listener(state);
+                        return () => emitter.off('state-update', listener);
+                    };
                 }
-            }
 
-            const proto = Object.getPrototypeOf(service);
-            if (proto) {
-                for (const key of Object.getOwnPropertyNames(proto)) {
-                    if (key !== 'constructor' && typeof service[key] === 'function' && !proxy[key]) {
-                        proxy[key] = service[key].bind(service);
-                    }
-                }
+                // Default: invoke method in Main process
+                return (...args) => ipcRenderer.invoke('service-invoke', { modulePath, method: prop, args });
             }
+        });
 
-            return proxy;
-        }
-        throw new Error("Unauthorized service: " + modulePath);
+        serviceProxies[modulePath] = proxy;
+        return proxy;
     },
+    EventEmitter: EventEmitter
+});
 
-    // Polyfill EventEmitter for renderer scripts so they don't break when contextIsolation strips classes
-    createEventEmitter: () => {
-        return class EventEmitter {
-            constructor() { this.listeners = {}; }
-            on(event, cb) { (this.listeners[event] = this.listeners[event] || []).push(cb); return this; }
-            once(event, cb) {
-                const wrapper = (...args) => { cb(...args); this.off(event, wrapper); };
-                return this.on(event, wrapper);
-            }
-            off(event, cb) {
-                if (this.listeners[event]) {
-                    this.listeners[event] = this.listeners[event].filter(l => l !== cb);
-                }
-                return this;
-            }
-            emit(event, ...args) {
-                if (this.listeners[event]) {
-                    this.listeners[event].slice().forEach(cb => cb(...args));
-                }
-                return true;
-            }
-        };
+// Handle events from Main process
+ipcRenderer.on('service-event', (event, { modulePath, event: eventName, args }) => {
+    const proxy = serviceProxies[modulePath];
+    if (proxy) {
+        // Update local state if it's a state-update event
+        if (eventName === 'state-update' && args[0]) {
+            Object.assign(initialStates[modulePath], args[0]);
+        }
+        proxy.emit(eventName, ...args);
     }
 });

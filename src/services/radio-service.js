@@ -1,7 +1,9 @@
+const EventEmitter = require('events');
 const SIMULATED_TRAFFIC = require('../common/simulated-traffic.js');
 
-class RadioService {
+class RadioService extends EventEmitter {
     constructor() {
+        super();
         this.state = {
             frequency: 11175000, // 11.175 MHz (HFGCS Primary)
             mode: 'USB',
@@ -53,6 +55,7 @@ class RadioService {
 
     notify() {
         this.listeners.forEach(l => l(this.state));
+        this.emit('state-update', this.state);
     }
 
     // --- New Capabilities ---
