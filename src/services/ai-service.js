@@ -79,10 +79,11 @@ class AIService {
             const content = await this.sendPrompt(messages);
             // Attempt to parse JSON
             try {
-                // Find JSON block if wrapped in markdown
-                const jsonMatch = content.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    return JSON.parse(jsonMatch[0]);
+                // Find JSON block if wrapped in markdown (safer than regex)
+                const start = content.indexOf('{');
+                const end = content.lastIndexOf('}');
+                if (start !== -1 && end !== -1 && end > start) {
+                    return JSON.parse(content.substring(start, end + 1));
                 }
                 return JSON.parse(content);
             } catch {
