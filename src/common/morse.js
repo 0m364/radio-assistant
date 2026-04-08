@@ -1,4 +1,4 @@
-var MORSE_MAP = {
+const MORSE_MAP = {
   A: ".-",
   B: "-...",
   C: "-.-.",
@@ -52,7 +52,7 @@ var MORSE_MAP = {
   "-": "-....-",
 };
 
-var REVERSE_MAP = {};
+const REVERSE_MAP = {};
 for (const char in MORSE_MAP) {
   REVERSE_MAP[MORSE_MAP[char]] = char;
 }

@@ -1,8 +1,8 @@
-var EventEmitter = require('events');
-var { decodeFromMorse } = require('../common/morse.js');
-var { AUDIO_CONFIG } = require('../common/audio-config.js');
+const EventEmitter = require('events');
+const { decodeFromMorse } = require('../common/morse.js');
+const { AUDIO_CONFIG } = require('../common/audio-config.js');
 
-var PCM_8BIT_SCALE = 1 / 128;
+const PCM_8BIT_SCALE = 1 / 128;
 
 class AudioProcessor extends EventEmitter {
     constructor() {
