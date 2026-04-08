@@ -86,6 +86,16 @@ async function runTests() {
             assert.ok(e.message.includes("not configured"), "Error message should mention configuration");
         }
 
+        // Test Case 6: Large input performance and safety
+        console.log("- Test: Large input performance and safety");
+        const largeInput = '{' + 'a'.repeat(100000);
+        AIService.sendPrompt = async () => largeInput;
+        const startTime = Date.now();
+        result = await AIService.analyzeTraffic('Some text');
+        const duration = Date.now() - startTime;
+        assert.ok(duration < 100, `Should handle large input quickly (took ${duration}ms)`);
+        assert.strictEqual(result.type, 'Unknown', "Should fallback to Unknown for unmatched brace in large input");
+
         console.log("\nAll AI Service tests passed!");
     } catch (error) {
         console.error("\nTests FAILED!");

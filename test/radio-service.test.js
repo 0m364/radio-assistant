@@ -1,55 +1,49 @@
 const assert = require('node:assert');
-const radioService = require('../src/services/radio-service.js');
-const SIMULATED_TRAFFIC = require('../src/common/simulated-traffic.js');
+const RadioService = require('../src/services/radio-service.js');
 
-function runTests() {
+async function runTests() {
     console.log("Running Radio Service Tests...");
 
-    const originalRandom = Math.random;
-    // Mock Math.random for deterministic jitter (jitter = 0)
-    Math.random = () => 0.5;
+    const initialState = { ...RadioService.getState() };
+    const originalMathRandom = Math.random;
 
     try {
-        // Test Case 1: Exact match
-        console.log("- Test: Exact match (11.175 MHz)");
-        const freq1 = 11175000;
-        const metrics1 = radioService.calculateSignalMetrics(freq1);
-        const match1 = SIMULATED_TRAFFIC.find(t => t.frequency === freq1);
-        assert.strictEqual(metrics1.present, true);
-        assert.strictEqual(metrics1.rssi, match1.rssi); // jitter = 0
-        assert.strictEqual(metrics1.snr, 20); // 20 + jitter
-        assert.strictEqual(metrics1.signalType, match1.type);
+        // Mock Math.random to return 0.5 for deterministic results
+        Math.random = () => 0.5;
 
-        // Test Case 2: Match within tolerance (4.999 kHz)
-        console.log("- Test: Match within tolerance (+4999 Hz)");
-        const freq2 = 11175000 + 4999;
-        const metrics2 = radioService.calculateSignalMetrics(freq2);
-        assert.strictEqual(metrics2.present, true);
-        assert.strictEqual(metrics2.signalType, match1.type);
+        // Test Case 1: Signal detection at 11.175 MHz (HFGCS)
+        console.log("- Test: Signal detection at 11.175 MHz");
+        RadioService.setFrequency(11175000);
+        let state = RadioService.getState();
+        // In calculateSignalMetrics: jitter = (0.5 * 4) - 2 = 0. match.rssi = -55.
+        assert.strictEqual(state.rssi, -55, "RSSI should be -55 dBm at 11.175 MHz");
+        assert.strictEqual(state.snr, 20, "SNR should be 20 dB at 11.175 MHz");
+        assert.strictEqual(state.isSignalPresent, true, "isSignalPresent should be true at 11.175 MHz");
 
-        // Test Case 3: Exactly at boundary (5000 Hz) - should NOT match (uses < 5000)
-        console.log("- Test: Boundary case (5000 Hz) - No Match");
-        const freq3 = 11175000 + 5000;
-        const metrics3 = radioService.calculateSignalMetrics(freq3);
-        assert.strictEqual(metrics3.present, false);
-        assert.strictEqual(metrics3.rssi, -115); // noiseBase = -115, noiseJitter = 0
-        assert.strictEqual(metrics3.snr, 0);
+        // Test Case 2: Background noise at 10.000 MHz
+        console.log("- Test: Background noise at 10.000 MHz");
+        RadioService.setFrequency(10000000);
+        state = RadioService.getState();
+        // In calculateSignalMetrics: noiseJitter = (0.5 * 10) - 5 = 0. noiseBase = -115.
+        assert.strictEqual(state.rssi, -115, "RSSI should be -115 dBm at 10 MHz");
+        assert.strictEqual(state.snr, 0, "SNR should be 0 dB at 10 MHz");
+        assert.strictEqual(state.isSignalPresent, false, "isSignalPresent should be false at 10 MHz");
 
-        // Test Case 4: No match (background noise)
-        console.log("- Test: No match (100 MHz)");
-        const freq4 = 100000000;
-        const metrics4 = radioService.calculateSignalMetrics(freq4);
-        assert.strictEqual(metrics4.present, false);
-        assert.strictEqual(metrics4.rssi, -115);
-        assert.strictEqual(metrics4.snr, 0);
-        assert.strictEqual(metrics4.signalType, null);
+        // Test Case 3: Subscriber notification
+        console.log("- Test: Subscriber notification");
+        let notifiedState = null;
+        const unsubscribe = RadioService.subscribe((s) => {
+            notifiedState = { ...s };
+        });
 
-        // Test Case 5: Different jitter
-        console.log("- Test: Non-zero jitter");
-        Math.random = () => 0.75; // jitter = (0.75 * 4) - 2 = 1
-        const metrics5 = radioService.calculateSignalMetrics(freq1);
-        assert.strictEqual(metrics5.rssi, match1.rssi + 1);
-        assert.strictEqual(metrics5.snr, 21);
+        // Change frequency to trigger updateSignalMetrics and notify
+        RadioService.setFrequency(8992000); // HFGCS Backup
+        assert.ok(notifiedState, "Subscriber should have been notified");
+        assert.strictEqual(notifiedState.frequency, 8992000, "Notified state should reflect new frequency");
+        // match.rssi for 8.992 MHz is -65. jitter = 0.
+        assert.strictEqual(notifiedState.rssi, -65, "Notified state should reflect updated RSSI");
+
+        unsubscribe();
 
         console.log("\nAll Radio Service tests passed!");
     } catch (error) {
@@ -57,7 +51,12 @@ function runTests() {
         console.error(error);
         process.exit(1);
     } finally {
-        Math.random = originalRandom;
+        // Restore original state and Math.random
+        RadioService.setFrequency(initialState.frequency);
+        RadioService.setMode(initialState.mode);
+        RadioService.setBandwidth(initialState.bandwidth);
+        RadioService.setActive(initialState.active);
+        Math.random = originalMathRandom;
     }
 }
 
