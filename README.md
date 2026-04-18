@@ -19,6 +19,7 @@ The AI acts as an RFML specialist and semi-chatbot. Tell the AI what you want to
 ### Tested Models
 02 MAR 2026 : tested with several offline available models Gemma 3 8B preforms the best for its size ..... smaller models can be used but must be fine tuned
 08 MAR 2026 : testing with Qwen 3.5 9B  is looking promising 
+18 APR 2026 : tested Gemma4 variants by Google/ Deepmind these are currently the best models for use along with an RFML both finetuned Gemma4 and my particular RFML are available on my huggingface Smalleyes0m364
 
 ### Credits and Licensing
 * [Google Gemma 3 Documentation](https://ai.google.dev/gemma/docs)
